@@ -1,0 +1,284 @@
+Se você quer um código em estilo **C** para implementar o Elementus, uma boa abordagem é criar a estrutura do tabuleiro, as regras e um loop principal de jogo. O código abaixo é um exemplo funcional e simplificado.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define TAM 4
+
+typedef struct {
+    char elemento; // F, A, T
+    int dono;      // 0=vazio, 1,2,3
+} Celula;
+
+Celula tabuleiro[TAM][TAM];
+
+int consecutivos[4] = {0,0,0,0};
+char ultimoSimbolo[4] = {' ',' ',' ',' '};
+int pularTurno[4] = {0,0,0,0};
+
+void inicializarTabuleiro() {
+    for(int i=0;i<TAM;i++) {
+        for(int j=0;j<TAM;j++) {
+            tabuleiro[i][j].elemento = ' ';
+            tabuleiro[i][j].dono = 0;
+        }
+    }
+}
+
+void exibirTabuleiro() {
+    printf("\n");
+
+    for(int i=0;i<TAM;i++) {
+        for(int j=0;j<TAM;j++) {
+
+            if(tabuleiro[i][j].dono == 0)
+                printf("[   ]");
+            else
+                printf("[%c%d ]",
+                       tabuleiro[i][j].elemento,
+                       tabuleiro[i][j].dono);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+int vence(char a, char b) {
+
+    if(a=='F' && b=='T') return 1;
+    if(a=='T' && b=='A') return 1;
+    if(a=='A' && b=='F') return 1;
+
+    return 0;
+}
+
+void converterVizinho(int linha, int coluna, char elemento, int jogador) {
+
+    int dx[4] = {-1,1,0,0};
+    int dy[4] = {0,0,-1,1};
+
+    for(int k=0;k<4;k++) {
+
+        int nx = linha + dx[k];
+        int ny = coluna + dy[k];
+
+        if(nx >=0 && nx < TAM &&
+           ny >=0 && ny < TAM) {
+
+            if(tabuleiro[nx][ny].dono != 0 &&
+               tabuleiro[nx][ny].dono != jogador) {
+
+                if(vence(elemento,
+                         tabuleiro[nx][ny].elemento)) {
+
+                    tabuleiro[nx][ny].elemento = elemento;
+                    tabuleiro[nx][ny].dono = jogador;
+                }
+            }
+        }
+    }
+}
+
+void verificarTrincas() {
+
+    // Horizontal
+    for(int i=0;i<TAM;i++) {
+        for(int j=0;j<TAM-2;j++) {
+
+            char a = tabuleiro[i][j].elemento;
+            char b = tabuleiro[i][j+1].elemento;
+            char c = tabuleiro[i][j+2].elemento;
+
+            if(a!=' ' && a==b && b==c) {
+
+                tabuleiro[i][j+1].elemento=' ';
+                tabuleiro[i][j+1].dono=0;
+            }
+        }
+    }
+
+    // Vertical
+    for(int j=0;j<TAM;j++) {
+        for(int i=0;i<TAM-2;i++) {
+
+            char a = tabuleiro[i][j].elemento;
+            char b = tabuleiro[i+1][j].elemento;
+            char c = tabuleiro[i+2][j].elemento;
+
+            if(a!=' ' && a==b && b==c) {
+
+                tabuleiro[i+1][j].elemento=' ';
+                tabuleiro[i+1][j].dono=0;
+            }
+        }
+    }
+}
+
+int tabuleiroCheio() {
+
+    for(int i=0;i<TAM;i++) {
+        for(int j=0;j<TAM;j++) {
+
+            if(tabuleiro[i][j].dono == 0)
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
+void registrarJogada(int jogador, char simbolo) {
+
+    if(ultimoSimbolo[jogador] == simbolo)
+        consecutivos[jogador]++;
+    else {
+        ultimoSimbolo[jogador] = simbolo;
+        consecutivos[jogador] = 1;
+    }
+
+    if(consecutivos[jogador] == 3) {
+        pularTurno[jogador] = 1;
+        consecutivos[jogador] = 0;
+    }
+}
+
+void turnoHumano(int jogador) {
+
+    int l,c;
+    char simbolo;
+
+    while(1) {
+
+        printf("Jogador %d\n", jogador);
+
+        printf("Linha (0-3): ");
+        scanf("%d",&l);
+
+        printf("Coluna (0-3): ");
+        scanf("%d",&c);
+
+        printf("Elemento (F/A/T): ");
+        scanf(" %c",&simbolo);
+
+        if(l>=0 && l<TAM &&
+           c>=0 && c<TAM &&
+           tabuleiro[l][c].dono==0)
+            break;
+
+        printf("Jogada invalida!\n");
+    }
+
+    tabuleiro[l][c].elemento = simbolo;
+    tabuleiro[l][c].dono = jogador;
+
+    converterVizinho(l,c,simbolo,jogador);
+    verificarTrincas();
+
+    registrarJogada(jogador, simbolo);
+}
+
+void turnoComputador() {
+
+    int l,c;
+
+    do {
+        l = rand()%TAM;
+        c = rand()%TAM;
+    } while(tabuleiro[l][c].dono != 0);
+
+    char opcoes[3] = {'F','A','T'};
+    char simbolo = opcoes[rand()%3];
+
+    printf("Computador jogou %c3 em (%d,%d)\n",
+           simbolo,l,c);
+
+    tabuleiro[l][c].elemento = simbolo;
+    tabuleiro[l][c].dono = 3;
+
+    converterVizinho(l,c,simbolo,3);
+    verificarTrincas();
+
+    registrarJogada(3, simbolo);
+}
+
+void contarPontuacao() {
+
+    int pontos[4] = {0};
+
+    for(int i=0;i<TAM;i++) {
+        for(int j=0;j<TAM;j++) {
+
+            if(tabuleiro[i][j].dono != 0)
+                pontos[tabuleiro[i][j].dono]++;
+        }
+    }
+
+    printf("\nResultado Final:\n");
+    printf("Jogador 1: %d\n", pontos[1]);
+    printf("Jogador 2: %d\n", pontos[2]);
+    printf("Computador: %d\n", pontos[3]);
+
+    int maior = pontos[1];
+    int vencedor = 1;
+
+    for(int i=2;i<=3;i++) {
+        if(pontos[i] > maior) {
+            maior = pontos[i];
+            vencedor = i;
+        }
+    }
+
+    printf("Vencedor: Jogador %d\n", vencedor);
+}
+
+int main() {
+
+    srand(time(NULL));
+
+    inicializarTabuleiro();
+
+    int jogadorAtual = 1;
+
+    while(!tabuleiroCheio()) {
+
+        exibirTabuleiro();
+
+        if(pularTurno[jogadorAtual]) {
+
+            printf("Jogador %d perdeu a vez!\n",
+                   jogadorAtual);
+
+            pularTurno[jogadorAtual] = 0;
+        }
+        else {
+
+            if(jogadorAtual == 3)
+                turnoComputador();
+            else
+                turnoHumano(jogadorAtual);
+        }
+
+        jogadorAtual++;
+
+        if(jogadorAtual > 3)
+            jogadorAtual = 1;
+    }
+
+    exibirTabuleiro();
+    contarPontuacao();
+
+    return 0;
+}
+```
+
+Esse código já implementa:
+
+* Tabuleiro 4x4.
+* Três jogadores (sendo o terceiro computador).
+* Conversão elemental (F > T > A > F).
+* Remoção da peça central em trincas horizontais e verticais.
+* Penalidade por usar o mesmo símbolo três vezes seguidas.
+* Computador aleatório.
+* Contagem final e definição do vencedor.
