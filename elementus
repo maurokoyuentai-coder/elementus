@@ -1,6 +1,4 @@
-Se você quer um código em estilo **C** para implementar o Elementus, uma boa abordagem é criar a estrutura do tabuleiro, as regras e um loop principal de jogo. O código abaixo é um exemplo funcional e simplificado.
 
-```c
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
