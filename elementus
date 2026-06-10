@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -28,8 +27,19 @@ void inicializarTabuleiro() {
 void exibirTabuleiro() {
     printf("\n");
 
-    for(int i=0;i<TAM;i++) {
-        for(int j=0;j<TAM;j++) {
+    // Cabeçalho das colunas
+    printf("     ");
+    for(int j = 1; j <= TAM; j++) {
+        printf("  %d   ", j);
+    }
+    printf("\n");
+
+    for(int i = 0; i < TAM; i++) {
+
+        // Número da linha
+        printf(" %d  ", i + 1);
+
+        for(int j = 0; j < TAM; j++) {
 
             if(tabuleiro[i][j].dono == 0)
                 printf("[   ]");
@@ -38,8 +48,10 @@ void exibirTabuleiro() {
                        tabuleiro[i][j].elemento,
                        tabuleiro[i][j].dono);
         }
+
         printf("\n");
     }
+
     printf("\n");
 }
 
@@ -151,14 +163,27 @@ void turnoHumano(int jogador) {
 
         printf("Jogador %d\n", jogador);
 
-        printf("Linha (0-3): ");
+        printf("Linha (1-4): ");
         scanf("%d",&l);
 
-        printf("Coluna (0-3): ");
+        printf("Coluna (1-4): ");
         scanf("%d",&c);
 
         printf("Elemento (F/A/T): ");
         scanf(" %c",&simbolo);
+
+        // Verifica se o símbolo é válido
+        if(simbolo != 'F' &&
+           simbolo != 'A' &&
+           simbolo != 'T') {
+
+            printf("\nERRO: Use apenas letras MAIUSCULAS (F, A ou T).\n\n");
+            continue;
+        }
+
+        // Converte coordenadas 1-4 para índices 0-3
+        l--;
+        c--;
 
         if(l>=0 && l<TAM &&
            c>=0 && c<TAM &&
@@ -190,7 +215,7 @@ void turnoComputador() {
     char simbolo = opcoes[rand()%3];
 
     printf("Computador jogou %c3 em (%d,%d)\n",
-           simbolo,l,c);
+           simbolo,l+1,c+1);
 
     tabuleiro[l][c].elemento = simbolo;
     tabuleiro[l][c].dono = 3;
@@ -228,7 +253,10 @@ void contarPontuacao() {
         }
     }
 
-    printf("Vencedor: Jogador %d\n", vencedor);
+    if(vencedor == 3)
+        printf("Vencedor: Computador\n");
+    else
+        printf("Vencedor: Jogador %d\n", vencedor);
 }
 
 int main() {
@@ -268,4 +296,6 @@ int main() {
     contarPontuacao();
 
     return 0;
+}
+
 }
